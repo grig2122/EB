@@ -1,0 +1,4 @@
+target 'Homework' do
+# AFNetworking
+pod 'AFNetworking', '~> 3.1'
+end
