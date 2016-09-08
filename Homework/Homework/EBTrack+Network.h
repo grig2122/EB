@@ -11,6 +11,8 @@
 @interface EBTrack (Network)
 
 + (EBTrack *)trackFromJson:(id)response;
+
+- (void)loadMediaFileWithCompletionBlock:(void(^)(NSString *localFilePath))block;
 - (void)loadImageWithCompletionBlock:(void(^)(UIImage *image))block;
 
 @end

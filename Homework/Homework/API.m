@@ -9,6 +9,8 @@
 #import "API.h"
 #import <AFNetworking/AFNetworking.h>
 #import "EBTrack+Network.h"
+#import <AFNetworking/AFImageDownloader.h>
+
 
 @interface API ()
 
@@ -33,6 +35,7 @@
     return instance;
 }
 
+// Download track data
 - (void)requestTrackFromEndpoint:(NSString *)endpoint completion:(CompletionHandler)block
 {
     NSURL *URL = [NSURL URLWithString:endpoint];
@@ -54,6 +57,52 @@
                                                      }];
     
     [dataTask resume];
+}
+
+// Download media file
+- (void)downloadMediaFileFromRemoteFilePath:(NSString *)remoteFilePath completion:(void(^)(NSString *localFilePath))block
+{
+    NSURL *URL = [NSURL URLWithString:remoteFilePath];
+    NSURLRequest *request = [NSURLRequest requestWithURL:URL];
+    NSURLSessionDownloadTask *downloadTask = [self.manager downloadTaskWithRequest:request
+                                                                          progress:nil
+                                                                       destination:^NSURL * _Nonnull(NSURL * _Nonnull targetPath, NSURLResponse * _Nonnull response) {
+                                                                           
+                                                                           NSString *fileName = [response suggestedFilename];
+                                                                           NSFileManager *fileManager = [NSFileManager defaultManager];
+                                                                           NSURL *documentsDirectoryURL = [fileManager URLForDirectory:NSDocumentDirectory
+                                                                                                                              inDomain:NSUserDomainMask
+                                                                                                                     appropriateForURL:nil
+                                                                                                                                create:NO
+                                                                                                                                 error:nil];
+                                                                           return [documentsDirectoryURL URLByAppendingPathComponent:fileName];
+                                                                           
+                                                                       } completionHandler:^(NSURLResponse * _Nonnull response, NSURL * _Nullable filePath, NSError * _Nullable error) {
+                                                                           if (block)
+                                                                               block([filePath absoluteString]);
+                                                                       }];
+    [downloadTask resume];
+}
+
+// Download image
+- (void)downloadImageFromPath:(NSString *)filePath
+                   completion:(void(^)(UIImage *image))block
+{
+    __weak typeof(self)weakSelf = self;
+    AFImageDownloader *imageDownloader = [[AFImageDownloader alloc] init];
+    AFHTTPResponseSerializer *serializer = imageDownloader.sessionManager.responseSerializer;
+    serializer.acceptableContentTypes = [serializer.acceptableContentTypes setByAddingObject:@"image/pjpeg"];
+    serializer.acceptableContentTypes = [serializer.acceptableContentTypes setByAddingObject:@"image/jpeg"];
+    [imageDownloader downloadImageForURLRequest:[NSURLRequest requestWithURL:[NSURL URLWithString:filePath]]
+                                        success:^(NSURLRequest * _Nonnull request, NSHTTPURLResponse * _Nullable response, UIImage * _Nonnull responseObject) {
+                                            if (block) {
+                                                dispatch_async(dispatch_get_main_queue(), ^{
+                                                    block(responseObject);
+                                                });
+                                            }
+                                        } failure:^(NSURLRequest * _Nonnull request, NSHTTPURLResponse * _Nullable response, NSError * _Nonnull error) {
+                                            [weakSelf handleError:error];
+                                        }];
 }
 
 - (void)handleError:(NSError *)error

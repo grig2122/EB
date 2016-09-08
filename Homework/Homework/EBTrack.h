@@ -14,7 +14,8 @@
 @property (nonatomic, strong) NSString *trackName;
 @property (nonatomic, strong) NSString *artistName;
 @property (nonatomic, strong) NSString *artistImageURL;
-@property (nonatomic, strong) NSString *mediaFile;
+@property (nonatomic, strong) NSString *mediaFileURL;
+@property (nonatomic, strong) NSDate *createdDate;
 
 @end
 

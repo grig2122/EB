@@ -7,7 +7,7 @@
 //
 
 #import "EBMusicPlayer.h"
-
+#import "EBTrack+Network.h"
 
 @interface EBMusicPlayer ()
 
@@ -17,20 +17,42 @@
 
 @implementation EBMusicPlayer
 
-- (void)playTrack:(EBTrack *)stream
+- (void)startPlayingTrack:(EBTrack *)track
 {
-    NSError *error = nil;
-    NSData *data = [NSData dataWithContentsOfFile:stream.mediaFile];
-    self.audioPlayer = [[AVAudioPlayer alloc] initWithData:data error:&error];
-    if (!error)
-    {
-        [self.audioPlayer play];
-        self.currentTrack = stream;
-    }
-    else
-    {
-        [self handleError:error];
-    }
+    __weak typeof(self)weakSelf = self;
+    [track loadMediaFileWithCompletionBlock:^(NSString *mediaFilePath) {
+        
+        NSError *error = nil;
+        NSData *data = [NSData dataWithContentsOfURL:[NSURL URLWithString:mediaFilePath]];
+        weakSelf.audioPlayer = [[AVAudioPlayer alloc] initWithData:data error:&error];
+        if (!error)
+        {
+            [weakSelf play];
+        }
+        else
+        {
+            [weakSelf handleError:error];
+        }
+    }];
+    
+    weakSelf.currentTrack = track;
+}
+
+- (void)play
+{
+    [self.audioPlayer play];
+    self.isPlaying = YES;
+}
+
+- (void)pause
+{
+    [self.audioPlayer pause];
+    self.isPlaying = NO;
+}
+
+- (BOOL)isPlaying
+{
+    return self.audioPlayer.isPlaying;
 }
 
 - (void)handleError:(NSError *)error

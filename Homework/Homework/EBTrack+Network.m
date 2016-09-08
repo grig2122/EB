@@ -7,11 +7,17 @@
 //
 
 #import "EBTrack+Network.h"
-#import <AFNetworking/AFImageDownloader.h>
+#import "API.h"
 
+@interface EBTrack ()
+
+// Private properties
+@property (nonatomic, strong) UIImage *image;
+@property (nonatomic, strong) NSString *localMediaFilePath;
+
+@end
 
 @implementation EBTrack (Network)
-
 
 // Map json to Track object
 + (EBTrack *)trackFromJson:(id)responseObject
@@ -32,34 +38,42 @@
     }
     
     // media file
-    NSURL *url = [NSURL URLWithString:responseObject[@"media_file"]];
-    NSData *musicData = [NSData dataWithContentsOfURL:url];
-    NSString *fileName = [NSString stringWithFormat:@"%@_%@.mp3",track.trackName,track.artistName];
-    NSString *mp3File = [NSTemporaryDirectory() stringByAppendingPathComponent:fileName];
-    if (![[NSFileManager defaultManager] fileExistsAtPath:mp3File])
-        [musicData writeToFile:mp3File atomically:YES];
-    track.mediaFile = mp3File;
-    
+    track.mediaFileURL = responseObject[@"media_file"];
+    track.createdDate = [NSDate date];
     
     return track;
 }
 
+- (void)loadMediaFileWithCompletionBlock:(void(^)(NSString *localFilePath))block
+{
+    if ([self.localMediaFilePath length] > 0)
+    {
+        block(self.localMediaFilePath);
+    }
+    else
+    {
+        // Download media file
+        __weak typeof(self)weakSelf = self;
+        [[API sharedInstance] downloadMediaFileFromRemoteFilePath:self.mediaFileURL completion:^(NSString *localFilePath) {
+            weakSelf.localMediaFilePath = localFilePath;
+            block(localFilePath);
+        }];
+    }
+}
 
-// Download artist image
 - (void)loadImageWithCompletionBlock:(void(^)(UIImage *image))block
 {
-    __weak typeof(self)weakSelf = self;
-    AFImageDownloader *imageDownloader = [[AFImageDownloader alloc] init];
-    [imageDownloader downloadImageForURLRequest:[NSURLRequest requestWithURL:[NSURL URLWithString:self.artistImageURL]]
-                                        success:^(NSURLRequest * _Nonnull request, NSHTTPURLResponse * _Nullable response, UIImage * _Nonnull responseObject) {
-                                            if (block) {
-                                                dispatch_async(dispatch_get_main_queue(), ^{
-                                                    block(responseObject);
-                                                });
-                                            }
-                                        } failure:^(NSURLRequest * _Nonnull request, NSHTTPURLResponse * _Nullable response, NSError * _Nonnull error) {
-                                            [weakSelf handleError:error];
-                                        }];
+    if (self.image)
+    {
+        block(self.image);
+    }
+    else
+    {
+        // Download artist image
+        [[API sharedInstance] downloadImageFromPath:self.artistImageURL completion:^(UIImage *image) {
+            block(image);
+        }];
+    }
 }
 
 - (void)handleError:(NSError *)error
@@ -68,3 +82,25 @@
 }
 
 @end
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

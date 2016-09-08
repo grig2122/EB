@@ -51,6 +51,7 @@
                                 </constraints>
                                 <color key="tintColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
                                 <state key="normal" image="play"/>
+                                <state key="selected" image="pause"/>
                                 <connections>
                                     <action selector="playButtonPressed:" destination="BYZ-38-t0r" eventType="touchUpInside" id="i7A-Dk-OO2"/>
                                 </connections>
@@ -121,16 +122,18 @@
                         <outlet property="activityIndicator" destination="uJC-n7-aBe" id="Wqt-Ec-11r"/>
                         <outlet property="artistImageView" destination="paS-lh-XiJ" id="e88-KB-CkF"/>
                         <outlet property="artistNameLabel" destination="9BO-yA-heo" id="haO-vV-v0h"/>
+                        <outlet property="playButton" destination="BFR-2n-fdA" id="1P5-jX-NPL"/>
                         <outlet property="trackNameLabel" destination="Iij-ro-loL" id="bfa-G5-Jsc"/>
                     </connections>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="dkx-z0-nzr" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="-3644" y="-232"/>
+            <point key="canvasLocation" x="-3993" y="-309"/>
         </scene>
     </scenes>
     <resources>
         <image name="next" width="25" height="25"/>
+        <image name="pause" width="25" height="25"/>
         <image name="play" width="25" height="25"/>
         <image name="prev" width="25" height="25"/>
     </resources>

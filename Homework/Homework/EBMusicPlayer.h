@@ -13,8 +13,10 @@
 @interface EBMusicPlayer : NSObject
 
 @property (nonatomic, strong) EBTrack *currentTrack;
+@property (nonatomic, assign) BOOL isPlaying;
 
-
-- (void)playTrack:(EBTrack *)stream;
+- (void)startPlayingTrack:(EBTrack *)track;
+- (void)pause;
+- (void)play;
 
 @end

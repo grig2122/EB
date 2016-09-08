@@ -13,6 +13,8 @@
 #import "EBMusicPlayer.h"
 #import "EBTrack+Network.h"
 
+static void *kObservationContext = &kObservationContext;
+
 @interface EBPlayerViewController ()
 
 // Other
@@ -26,6 +28,7 @@
 @property (weak, nonatomic) IBOutlet UILabel *artistNameLabel;
 @property (weak, nonatomic) IBOutlet UIImageView *artistImageView;
 @property (weak, nonatomic) IBOutlet UIActivityIndicatorView *activityIndicator;
+@property (weak, nonatomic) IBOutlet UIButton *playButton;
 
 // Actions
 - (IBAction)playButtonPressed:(id)sender;
@@ -45,6 +48,12 @@
     
     self.tracks = [[NSMutableArray alloc] init];
     [self setupMediaPlayer];
+    [self registerAsObserver];
+}
+
+- (void)dealloc
+{
+    [self unregisterObserver];
 }
 
 #pragma mark - Private methods
@@ -55,10 +64,10 @@
     [self.activityIndicator startAnimating];
     API *api = [API sharedInstance];
     [api requestTrackFromEndpoint:ENDPOINT
-                       completion:^(EBTrack *stream) {
-                           [weakSelf.tracks addObject:stream];
-                           [weakSelf.musicPlayer playTrack:stream];
-                           [weakSelf displayTrackDetails:stream];
+                       completion:^(EBTrack *track) {
+                           [weakSelf.tracks addObject:track];
+                           [weakSelf.musicPlayer startPlayingTrack:track];
+                           [weakSelf displayTrackDetails:track];
                            [weakSelf.activityIndicator stopAnimating];
                        }];
 }
@@ -82,8 +91,23 @@
 
 - (IBAction)playButtonPressed:(id)sender
 {
-    if (!self.musicPlayer.currentTrack) {
+    UIButton *playButton = sender;
+    playButton.selected = !playButton.selected;
+    
+    if (!self.musicPlayer.currentTrack)
+    {
         [self loadTrack];
+    }
+    else
+    {
+        if ([self.musicPlayer isPlaying])
+        {
+            [self.musicPlayer pause];
+        }
+        else
+        {
+            [self.musicPlayer play];
+        }
     }
 }
 
@@ -94,7 +118,7 @@
     if (indexOfPrevTrack >= 0 && self.musicPlayer.currentTrack)
     {
         EBTrack *track = [self.tracks objectAtIndex:indexOfPrevTrack];
-        [self.musicPlayer playTrack:track];
+        [self.musicPlayer startPlayingTrack:track];
         [self displayTrackDetails:track];
     }
 }
@@ -106,11 +130,42 @@
     if (indexOfNextTrack < [self.tracks count])
     {
         EBTrack *track = [self.tracks objectAtIndex:indexOfNextTrack];
-        [self.musicPlayer playTrack:track];
+        [self.musicPlayer startPlayingTrack:track];
         [self displayTrackDetails:track];
     }
     else
         [self loadTrack];
+}
+
+#pragma mark - KVO
+
+- (void)registerAsObserver
+{
+    [self.musicPlayer addObserver:self
+                       forKeyPath:@"isPlaying"
+                          options:NSKeyValueObservingOptionNew
+                          context:kObservationContext];
+}
+
+- (void)unregisterObserver
+{
+    [self.musicPlayer removeObserver:self forKeyPath:@"isPlaying"];
+}
+
+- (void)observeValueForKeyPath:(NSString *)keyPath
+                      ofObject:(id)object
+                        change:(NSDictionary *)change
+                       context:(void *)context
+{
+    if (context == kObservationContext)
+    {
+        if ([keyPath isEqual:@"isPlaying"] && [object isKindOfClass:[EBMusicPlayer class]])
+        {
+            self.playButton.selected = self.musicPlayer.isPlaying;
+        }
+    }
+    else if ([super respondsToSelector:_cmd])
+        [super observeValueForKeyPath:keyPath ofObject:object change:change context:context];
 }
 
 
