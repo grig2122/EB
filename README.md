@@ -8,7 +8,6 @@ Homework Project (iOS)
 * Run `pod install`
 * Enjoy!
 
-
 ## Requirements
 * Create a music player that downloads and streams tracks by downloading them from this endpoint:
 * http://streaming.earbits.com/api/v1/track.json?stream_id=5654d7c3c5aa6e00030021aa
@@ -17,3 +16,6 @@ Homework Project (iOS)
 * ­ Include the ability to play, pause, skip to next tracks, and skip to previous tracks ­ Include appropriate Unit tests / UI Unit Tests
 * ­ Include appropriate documentation where necessary
 * ­ Use CocoaPods / Carthage where necessary
+
+## Third Party Libraries
+* AFNetworking
